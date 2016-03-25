@@ -17,8 +17,10 @@ The concepts behind this approach can now be explored using our tool, PER. Using
 ## Information for contributors
 
 The master branch of the tool must follow these requirements:
+
 - All functionality and resources must be contained in a single html file.
 - The tool must be functional in offline mode: no links to libraries like JQuery, no server-side processing.
 - It must work in the latest versions of all major browsers.
+
 Any commits to the master branch that do not comply to these requirements will be rejected. Fork if in disagreement.
 
