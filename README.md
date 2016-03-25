@@ -1,7 +1,7 @@
 # per
 Performance-Energy-Reliability (PER) Interplay exploration tool
 
-About
+## About
 
 Modelling the interplay between Performance, Energy and Reliability (PER) in multi- and many-core systems has been one of the main objectives within the PRiME project (http://www.prime-project.org). This has led to the development of the idea to represent PER interplay as a region of reliable operation in the throughput-voltage space. This region is defined by platform-specific constraints (minimum and maximum voltage, dynamic voltage-frequency scaling points), and also design requirements, such as maximum power consumption or minimum throughput.
 
@@ -14,7 +14,7 @@ The concepts behind this approach can now be explored using our tool, PER. Using
 3. Read the solution. The tool will plot the PER diagram and suggest the best operating point: the number of active cores and the operating voltage and frequency for these cores. For given power requirements, the tool maximizes the combined throughput. For given throughput requirements, the tool minimizes the power consumption.
 
 
-Information for contributors
+## Information for contributors
 
 The master branch of the tool must follow these requirements:
 - All functionality and resources must be contained in a single html file.
