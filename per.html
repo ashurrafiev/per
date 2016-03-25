@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<!--
+Copyright (c) 2013-2016 Newcastle University
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+-->
+<html>
+ <meta charset="UTF-8"> 
+<meta http-equiv="X-UA-Compatible" content="IE=9" />
+<head>
+<title>Performance-Energy Interplay Demo</title>
+
+<script>
+
+var presetCortexA7bodytrack = { // Provided by Newcastle University
+	name: "ARM Cortex-A7 (bodytrack)",
+	v: [1.004, 1.05, 1.13, 1.232],
+	f: [800, 1000, 1200, 1400],
+	p: [0.047, 0.069, 0.091, 0.125],
+	pi: [0.033, 0.050, 0.075, 0.114],
+	range: 4
+};
+
+var presetCortexA15bodytrack = { // Provided by Newcastle University
+	name: "ARM Cortex-A15 (bodytrack)",
+	v: [0.916, 0.947, 0.997, 1.04, 1.096, 1.175, 1.3],
+	f: [800, 1000, 1200, 1400, 1600, 1800, 2000],
+	p: [0.182, 0.211, 0.286, 0.352, 0.408, 0.509, 0.849],
+	pi: [0.230, 0.339, 0.413, 0.548, 0.741, 0.979, 1.316],
+	range: 7
+};
+
+var presetCortexA7 = { // Provided by Newcastle University
+	name: "ARM Cortex-A7 (sqrt)",
+	v: [0.913, 0.913, 0.913, 0.913, 0.9512, 0.988, 1.026, 1.063, 1.101, 1.138, 1.176, 1.22, 1.273],
+	f: [200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400],
+	p: [0.0228, 0.032, 0.037, 0.045, 0.057, 0.075, 0.0881, 0.125, 0.148, 0.178, 0.217, 0.248, 0.294],
+	pi: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	range: 13
+};
+
+var presetCortexA15 = { // Provided by Newcastle University
+	name: "ARM Cortex-A15 (sqrt)",
+	v: [0.9125, 0.9125, 0.9125, 0.9125, 0.9125, 0.9125, 0.925, 0.94, 0.973, 0.998, 1.023, 1.048, 1.062, 1.077, 1.115, 1.15375, 1.191, 1.241],
+	f: [200, 300, 400, 500, 600, 700, 800, 900, 1000, 1100, 1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900],
+	p: [0.122, 0.165, 0.208, 0.252, 0.292, 0.337, 0.39, 0.45, 0.528, 0.61, 0.702, 0.797, 0.878, 0.99, 1.14, 1.318, 1.52, 1.796, 2.25],
+	pi: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	range: 18
+};
+
+var presetXeonPhi = { // Provided by Newcastle University and University of Southampton
+	name: "Intel Xeon Phi (raytrace)",
+	v: [0.885, 0.9503, 1.015, 1.08, 1.131],
+	f: [619, 857, 1048, 1143, 1333],
+	p: [0.605, 0.779, 0.970, 0.978, 1.111],
+	pi: [88.395, 94.021, 98.830, 101.622, 103.189],
+	range: 5
+}
+
+var presetFPGA = { // Provided by Imperial College London
+	name: "Zynq FPGA (convolution)",
+	v: [0.88, 0.89, 0.9, 0.91, 0.92, 0.93, 0.94, 0.95, 0.96, 0.97, 0.98, 0.99, 1, 1.01, 1.02, 1.03, 1.04, 1.05],
+	f: [73, 76, 78, 81, 83, 85, 89, 90, 93, 94, 97, 99, 100, 102, 103, 104, 106, 107],
+	p: [0.2187, 0.2385, 0.2448, 0.2492, 0.2625, 0.2795, 0.2882, 0.2927, 0.3070, 0.3148, 0.3330, 0.3330, 0.3436, 0.3597, 0.3638, 0.3707, 0.3829, 0.4031],
+	pi: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	range: 18
+}
+
+var presetCmos = { // Provided by Newcastle University
+	name: "CMOS (Async SRAM controller)",
+	v: [0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1, 1.1, 1.2],
+	f: [7.4225e02, 3.9023e03, 1.5199e04, 3.8868e04, 6.9005e04, 9.9852e04, 1.2908e05, 1.5657e05, 1.8511e05, 2.1206e05, 2.3403e05],
+	p: [1.5333e-06, 6.2734e-06, 2.7525e-05, 7.4235e-05, 1.5799e-04, 2.9625e-04, 4.9361e-04, 7.6366e-04, 1.0879e-03, 1.5172e-03, 2.0334e-03],
+	pi: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+	range: 11
+};
+
+var userDefined = false;
+var presetModels = ['presetCortexA7bodytrack', 'presetCortexA15bodytrack', 'presetCortexA7', 'presetCortexA15', 'presetXeonPhi', 'presetFPGA', 'presetCmos', 'User defined'];
+
+//--------------------------------------------
+// Power model
+
+function parseModel(src) {
+	var model = {name: "User defined", v:[], f:[], p:[], pi:[], range:0};
+	src = src.split("\n");
+	for(var i=0; i<src.length; i++) {
+		src[i] = src[i].trim();
+		if(src[i]=="")
+			continue;
+		var line = src[i].split(/[;,\s]\s*/, 4);
+		if(line.length!=4)
+			return false;
+		model.v[i] = parseFloat(line[0]);
+		model.f[i] = parseFloat(line[1]);
+		model.p[i] = parseFloat(line[2]);
+		model.pi[i] = parseFloat(line[3]);
+		if(i>0 && model.v[i]<model.v[i-1])
+			return false;
+	}
+	model.range = model.v.length;
+	if(model.range<2)
+		return false;
+	return model;
+}
+
+function prepareModel(model, maxCores) {
+	model.maxCores = maxCores;
+	model.lim = [];
+	model.hasLim = false;
+	model.limBelow = true;
+	model.ncores = 1;
+	model.active = -1;
+	model.scaling = 1;
+	return model;
+}
+
+function scale_none(f, s, n) {
+	return f * n;	
+}
+
+function scale_amdahl(f, s, n) {
+	return f * n / (s + n*(1.0-s));	
+}
+
+function scale_gustaf(f, s, n) {
+	return f * ((1.0-s) + n * s);	
+}
+
+function scale_sunni(f, s, n) {
+	return f * ((1.0-s) + s * Math.pow(n, g_power)) / ((1.0-s) + s * Math.pow(n, g_power) / n);	
+}
+
+var g_power = 1.5;
+var scale = scale_amdahl;
+
+function setPowerLimit(model, plim, maxCores) {
+	model.scaling = 1;
+	model.ncores = -1;
+	model.active = -1;
+	var  max = 0;
+	for(var i=model.v.length-1; i>=0; i--) {
+		var n = (plim - model.pi[i]) / model.p[i];
+		model.lim[i] = model.f[i] * n;
+		n = Math.floor(n);
+		if(n>maxCores) n = maxCores;
+		if(model.f[i] * n > max) {
+			max = model.f[i] * n;
+			model.ncores = n;
+			model.active = i;
+		}
+	}
+	model.hasLim = true;
+	model.limBelow = true;
+	if(model.ncores<=0) {
+		model.ncores = 1;
+		model.active = 0;
+		return false;
+	}
+	return true;
+}
+	
+function setPowerLimitScaled(model, plim, s, maxCores) {
+	model.scaling = s;
+	model.ncores = -1;
+	model.active = -1;
+	var max = 0;
+	for(var i=model.v.length-1; i>=0; i--) {
+		var maxn = Math.floor((plim - model.pi[i]) / model.p[i]);
+		if(maxn>maxCores) maxn = maxCores;
+		var n;
+		var fn = 0.0;
+		var prevfn = 0.0;
+		for(n = maxn; n>0; n--) {
+			fn = scale(model.f[i], s, n) * model.ipc;;
+			if(n<maxn && fn<prevfn) {
+				fn = prevfn;
+				break;
+			}
+			prevfn = fn;
+		}
+		n++;
+		model.lim[i] = fn;
+		if(fn > max) {
+			max = fn;
+			model.ncores = n;
+			model.active = i;
+		}
+	}
+	model.hasLim = true;
+	model.limBelow = true;
+	if(model.ncores<=0) {
+		model.ncores = 1;
+		model.active = 0;
+		return false;
+	}
+	return true;
+}
+
+
+function setFreqLimit(model, flim, maxCores) {
+	model.scaling = 1;
+	model.ncores = -1;
+	model.active = -1;
+	var min = undefined;
+	for(var i=0; i<model.v.length; i++) {
+		var n = flim / model.f[i];
+		model.lim[i] = flim;
+		n = Math.ceil(n);
+		if(n>maxCores) n = maxCores;
+		if(n * model.f[i] >=flim && (model.p[i] * n < min || min==undefined)) {
+			min = model.p[i] * n;
+			model.ncores = n;
+			model.active = i;
+		}
+	}
+	model.hasLim = true;
+	model.limBelow = false;
+	if(model.ncores<=0) {
+		model.ncores = maxCores;
+		model.active = model.v.length - 1;
+		return false;
+	}
+	return true;
+}
+
+function setFreqLimitScaled(model, flim, s, maxCores) {
+	model.scaling = s;
+	model.ncores = -1;
+	model.active = -1;
+	var min = undefined;
+	for(var i=0; i<model.v.length; i++) {
+		var n;
+		var fn = 0.0;
+		for(n=1; n<=maxCores; n++) {
+			fn = scale(model.f[i], s, n) * model.ipc;;
+			if(fn>=flim)
+				break;
+		}
+		model.lim[i] = flim;
+		if(fn >= flim && (model.p[i] * n < min || min==undefined)) {
+			min = model.p[i] * n;
+			model.ncores = n;
+			model.active = i;
+		}
+	}
+	model.hasLim = true;
+	model.limBelow = false;
+	if(model.ncores<=0) {
+		model.ncores = maxCores;
+		model.active = model.v.length - 1;
+		return false;
+	}
+	return true;
+}
+
+function maxF(model) {
+	var max = 0.0;
+	var n = (model.ncores>0) ? model.ncores : 1;
+	for(var i=0; i<model.v.length; i++) {
+		var fn = scale(model.f[i], model.scaling, n) * model.ipc;;
+		if(fn>max)
+			max = fn;
+		if(model.hasLim && model.lim[i]>max)
+			max = model.lim[i];
+	}
+	if(model.active>=0 && model.f[model.active]*n < max*0.5) {
+		max = model.f[model.active]*n*2.0;
+	}
+	for(var d=1.0; ; d*=10.0) {
+		var m = Math.floor(max/d+1.0)*d;
+		if(m>max*1.01) {
+			max = m;
+			return max;
+		}
+	}
+}
+
+function getFn(model, i, n) {
+	return scale(model.f[i], model.scaling, n) * model.ipc;
+}
+
+function minV(model) {
+	var min = 1000.0;
+	for(var i=0; i<model.v.length; i++) {
+		if(model.v[i]<min)
+			min = model.v[i];
+	}
+	return min;
+}
+
+function maxV(model) {
+	var max = 0.0;
+	for(var i=0; i<model.v.length; i++) {
+		if(model.v[i]>max)
+			max = model.v[i];
+	}
+	return max;
+}
+
+function powerForS(model, s) {
+	var min = model.p[0] + model.pi[0];
+	var max = model.p[model.range-1] * model.maxCores + model.pi[model.range-1];
+	return min+s*(max-min);
+}
+
+function freqForS(model, s) {
+	var min = model.f[0]
+	var max = model.f[model.range-1] * model.ipc * model.maxCores;
+	return min+s*(max-min);
+}
+
+//--------------------------------------------
+// Plot
+
+var GRID_COLOR = "#999";
+var SOLUTION_COLOR = "#05d";
+var LIMIT_COLOR = "#d00";
+var LIMIT_AREA_COLOR = "#f99";
+var DOT_SIZE = 10;
+
+function calcx(plot, i) {
+	return plot.x0 + (plot.w*(plot.model.v[i]-plot.xmin)/(plot.xmax-plot.xmin));
+}
+
+function plotLine(ctx, plot, value) {
+	ctx.beginPath();
+	for(var i=0; i<plot.n; i++) {
+		var x = calcx(plot, i);
+		var v = value(plot.model, i);
+		var y = (plot.h * v / plot.ymax);
+		if(i==0)
+			ctx.moveTo(x, plot.y0 - y);
+		else
+			ctx.lineTo(x, plot.y0 - y);
+	}
+	ctx.stroke();
+}
+
+function plotArea(ctx, plot, below, value) {
+	ctx.beginPath();
+	if(below) {
+		ctx.moveTo(plot.x0 + plot.w, plot.y0);
+		ctx.lineTo(plot.x0, plot.y0);
+	}
+	else {
+		ctx.moveTo(plot.x0 + plot.w, plot.y0 - plot.h);
+		ctx.lineTo(plot.x0, plot.y0 - plot.h);
+	}
+	for(var i=0; i<plot.n; i++) {
+		var x = calcx(plot, i);
+		var v = value(plot.model, i);
+		var y = (plot.h * v / plot.ymax);
+		ctx.lineTo(x, plot.y0 - y);
+	}
+	ctx.closePath();
+	ctx.fill();
+}
+
+function normalizePlot(plot) {
+	plot.ymax = maxF(plot.model);
+}
+
+function plotModel(ctx, plot, width, height) {
+	ctx.font = "bold 15px arial";
+	ctx.fillStyle = "#fff";
+	ctx.fillRect(0, 0, width, height);
+
+	plot.x0 = 30;
+	plot.y0 = height - 50;
+	plot.w = width - 110;
+	plot.h = height - 90;
+	
+	plot.n = plot.model.range;
+	plot.xmin = minV(plot.model);
+	plot.xmax = maxV(plot.model);
+	if(plot.ymax==undefined)
+		normalizePlot(plot);
+	
+	if(plot.ymax>0) {
+		if(plot.model.hasLim) {
+			var grd=ctx.createLinearGradient(plot.x0, plot.y0 - plot.h, plot.x0, plot.y0);
+			grd.addColorStop(0, plot.model.limBelow ? LIMIT_AREA_COLOR : "#fff");
+			grd.addColorStop(1, !plot.model.limBelow ? LIMIT_AREA_COLOR : "#fff");
+			ctx.fillStyle = grd;
+			plotArea(ctx, plot, plot.model.limBelow, function(model, i) {
+				return model.lim[i];
+			});
+		}
+	}
+	
+	var prevx = -1;
+	for(var i=0; i<plot.n; i++) {
+		var x = calcx(plot, i);
+		if(x==prevx)
+			continue;
+		prevx = x;
+		
+		ctx.lineWidth = (plot.model.active==i) ? 2 : 1;
+		ctx.strokeStyle = (plot.model.active==i) ? SOLUTION_COLOR : GRID_COLOR;
+		ctx.beginPath();
+		ctx.moveTo(x, plot.y0 - plot.h);
+		ctx.lineTo(x, plot.y0);
+		ctx.stroke();
+		ctx.strokeStyle = (plot.model.active==i) ? SOLUTION_COLOR : "#000";
+		ctx.beginPath();
+		ctx.moveTo(x, plot.y0);
+		ctx.lineTo(x, plot.y0 + 5);
+		ctx.stroke();
+		ctx.fillStyle = ctx.strokeStyle;
+		ctx.fillText(plot.model.v[i] + (i==plot.n-1 ? " V" : ""), x, plot.y0 + 22);
+	}
+	
+	ctx.lineWidth = 1;
+	ctx.strokeStyle = "#000";
+	ctx.beginPath();
+	ctx.moveTo(plot.x0 - 5, plot.y0 - plot.h);
+	ctx.lineTo(plot.x0 + 5, plot.y0 - plot.h);
+	ctx.stroke();
+	ctx.fillStyle = ctx.strokeStyle;
+	ctx.fillText(plot.ymax + " MIPS", plot.x0 + 10, plot.y0 - plot.h + 5);
+
+	ctx.font = "13px arial";
+	if(plot.ymax>0) {
+		ctx.lineWidth = 3;
+		for(var ncores = 1, nmajor = 1; ncores <= plot.model.maxCores; ncores++) {
+			if(ncores==2)
+				ctx.lineWidth = 1;
+			if(ncores==1 || ncores==nmajor)
+				ctx.strokeStyle = "#000";
+			else
+				ctx.strokeStyle = GRID_COLOR;
+			
+			if(ncores==nmajor) {
+				var v = getFn(plot.model, plot.n-1, ncores);
+				var y = (plot.h * v / plot.ymax);
+				ctx.fillStyle = "#000";
+				ctx.fillText(ncores+(ncores==1 ? " core" : " cores"), plot.x0 + plot.w + 5, plot.y0 - y + 5);
+				nmajor = nmajor * 2;
+			}
+			if(ncores==plot.model.ncores)
+				continue;
+			ctx.save();
+			ctx.beginPath();
+			ctx.rect(plot.x0, plot.y0 - plot.h, plot.w, plot.h);
+			ctx.clip();
+			plotLine(ctx, plot, function(model, i) {
+				return getFn(model, i, ncores);
+			});
+			ctx.restore();
+		}
+		
+		ctx.lineWidth = 4;
+		if(plot.model.hasLim) {
+			ctx.strokeStyle = LIMIT_COLOR;
+			plotLine(ctx, plot, function(model, i) {
+				return model.lim[i];
+			});
+		}
+		ctx.strokeStyle = SOLUTION_COLOR;
+		plotLine(ctx, plot, function(model, i) {
+			return getFn(model, i, model.ncores);
+		});
+
+		if(plot.model.active>=0) {
+			var x = calcx(plot, plot.model.active);
+			var v = getFn(plot.model, plot.model.active, plot.model.ncores);
+			var y = (plot.h * v / plot.ymax);
+			ctx.fillStyle = SOLUTION_COLOR;
+			ctx.fillRect(x-DOT_SIZE/2, plot.y0-y-DOT_SIZE/2, DOT_SIZE, DOT_SIZE);
+			ctx.lineWidth = 1.5;
+			ctx.strokeStyle = "#fff";
+			ctx.strokeRect(x-DOT_SIZE/2, plot.y0-y-DOT_SIZE/2, DOT_SIZE, DOT_SIZE);
+		}
+	}
+	
+	ctx.lineWidth = 2;
+	ctx.strokeStyle = "#000";
+	ctx.beginPath();
+	ctx.moveTo(plot.x0, plot.y0);
+	ctx.lineTo(plot.x0 + plot.w + 20, plot.y0);
+	ctx.moveTo(plot.x0, plot.y0 - plot.h - 20);
+	ctx.lineTo(plot.x0, plot.y0);
+	ctx.stroke();
+	ctx.fillStyle = "#000";
+	ctx.fillText("Throughput", plot.x0 + 10, plot.y0 - plot.h - 15);
+	ctx.fillText("Voltage", plot.x0 + plot.w, plot.y0 + 42);
+	
+	ctx.beginPath();
+	ctx.moveTo(plot.x0-4, plot.y0-plot.h-20);
+	ctx.lineTo(plot.x0+4, plot.y0-plot.h-20);
+	ctx.lineTo(plot.x0, plot.y0-plot.h-35);
+	ctx.moveTo(plot.x0+plot.w+20, plot.y0-4);
+	ctx.lineTo(plot.x0+plot.w+20, plot.y0+4);
+	ctx.lineTo(plot.x0+plot.w+35, plot.y0);
+	ctx.closePath();
+	ctx.fill();
+}
+
+//--------------------------------------------
+// Html UI
+
+var activeModel = undefined;
+var plot = undefined;
+
+function getLimit(id) {
+	var lim = parseFloat(document.getElementById(id).value);
+	if(lim<0)
+		lim = 0;
+	else if(lim>1)
+		lim = 1;
+	document.getElementById(id).value = lim;
+	return lim;
+}
+
+function applyLimits() {
+	if(activeModel==undefined)
+		return;
+	
+	// set scaling model
+	scale = window[document.getElementById("law").value];
+	document.getElementById("cscale").style.display = (scale!=scale_none) ? "block" : "none";
+	document.getElementById("cgpower").style.display = (scale==scale_sunni) ? "block" : "none";
+	
+	// set G(N) for Sun-Ni's model
+	g_power = parseFloat(document.getElementById("gpower").value);
+	document.getElementById("valgpower").textContent = g_power;
+	
+	// get limit type
+	var lim = document.getElementById("limtype").value;
+	document.getElementById("cpowerlim").style.display = (lim=="powerlim") ? "block" : "none";
+	document.getElementById("cfreqlim").style.display = (lim!="powerlim") ? "block" : "none";
+	
+	// get scale
+	var s = getLimit("scale");
+	document.getElementById("valscale").textContent = s;
+	
+	// apply limits to the model
+	if(lim=="powerlim") {
+		lim = powerForS(activeModel, getLimit(lim));
+		document.getElementById("valpowerlim").textContent = lim.toFixed(3)+"W";
+		setPowerLimitScaled(activeModel, lim, s, activeModel.maxCores);
+	}
+	else {
+		lim = freqForS(activeModel, getLimit(lim))
+		document.getElementById("valfreqlim").textContent = lim.toFixed(0)+" MIPS";
+		setFreqLimitScaled(activeModel, lim, s, activeModel.maxCores);
+	}
+	
+	// update plot
+	normalizePlot(plot);
+	var canvas = document.getElementById("plot");
+	plotModel(canvas.getContext("2d"), plot, canvas.width, canvas.height);
+	
+	// update solution
+	if(plot.model.ncores<0) {
+		document.getElementById("csolve").innerHTML = "<i>No solution</i>";
+	}
+	else {
+		var th = getFn(plot.model, plot.model.active, plot.model.ncores);
+		document.getElementById("csolve").innerHTML =
+			"Active cores: <b>"+plot.model.ncores
+			+" of "+plot.model.maxCores
+			+"</b><br/>Voltage: <b>" +plot.model.v[plot.model.active]
+			+"V</b><br/>Freq.: <b>"+plot.model.f[plot.model.active]
+			+"MHz</b><br/>Power: <b>"+(plot.model.p[plot.model.active]*plot.model.ncores+plot.model.pi[plot.model.active]).toFixed(3)
+			+"W</b><br/>Throughput: <b>"+th.toFixed(0)
+			+" MIPS</b><br/>("+(th*100.0/freqForS(plot.model, 1.0)).toFixed(0)
+			+"% of platform's maximum)<br>Scaled IPC for 1 core: <b>"+(th/plot.model.f[plot.model.active]/plot.model.ncores).toFixed(2)
+			+"</b>";
+	}
+}
+
+function setActiveModel() {
+	// check selected core model
+	var model = window[document.getElementById("platform").value];
+	if(model==undefined) {
+		document.getElementById("customedit").style.display = "block";
+		model = userDefined;
+		if(model==false)
+			return;
+	}
+	else {
+		document.getElementById("customedit").style.display = "none";
+	}
+	document.getElementById("graph").style.display = "block";
+	document.getElementById("edit").style.display = "none";
+		
+	// set number of cores
+	var ncores = document.getElementById("ncores").value;
+	ncores = Math.round(Math.pow(2, ncores));
+	document.getElementById("valncores").textContent = ncores;
+
+	// set number of cores
+	model.ipc = document.getElementById("ipc").value;
+	document.getElementById("valipc").textContent = model.ipc;
+	
+	// set active model and update
+	activeModel = prepareModel(model, ncores);
+	document.getElementById("modelName").textContent = activeModel.name;
+	plot = {model: activeModel};
+	applyLimits();
+}
+
+function editClicked() {
+	document.getElementById("graph").style.display = "none";
+	document.getElementById("edit").style.display = "block";
+}
+
+function cancelEdit() {
+	document.getElementById("graph").style.display = "block";
+	document.getElementById("edit").style.display = "none";
+}
+
+function parseClicked() {
+	var model = parseModel(document.getElementById("src").value);
+	if(model==false) {
+		alert("Parse error.");
+		return;
+	}
+	userDefined = model;
+	setActiveModel();
+}
+
+function updatePlotSize() {
+	var plot = document.getElementById("plot");
+	var w = window.innerWidth - 300;
+	if(w<600) w = 400;
+	plot.width = w;
+	var h = window.innerHeight - 100;
+	if(h<400) h = 300;
+	plot.height = h;
+	applyLimits();
+}
+
+window.onload = function() {
+    select = document.getElementById("platform")
+
+	for (var i = 0; i<presetModels.length; i++){
+		var opt = document.createElement('option');
+		opt.value = presetModels[i];
+		opt.selected = (i==0);
+		var model = window[presetModels[i]];
+		if(model==undefined)
+			opt.innerHTML = presetModels[i];
+		else
+			opt.innerHTML = model.name;
+		select.appendChild(opt);
+	}
+	
+	setActiveModel();
+	
+	updatePlotSize();
+	window.addEventListener("resize", updatePlotSize);
+}
+
+</script>
+
+<style>
+<!--
+body {
+	font-family: Arial, Helvetica, sans serif;
+	font-size: 12pt;
+	background-color: #fff;
+	margin: 10px;
+}
+.box {
+	box-sizing: border-box;
+	-webkit-box-sizing:border-box;
+	-moz-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+}
+.iewarn {
+	width: 100%;
+	color: #d00;
+	font-size: 14pt;
+	font-weight: bold;
+	text-align: center;
+	background-color: #fdd;
+	padding: 10px;
+	border: 1px solid #d00;
+}
+select {
+	font-size: inherit;
+}
+div#ctl {
+	float: left;
+	width: 250px;
+}
+h3 {
+	color: #fff;
+	margin: 0px;
+	padding: 4px;
+	font-size: 16pt;
+}
+div.platf {
+	background-color: #d7eef4;
+	border: 1px solid #216778;
+	margin-bottom: 10px;
+}
+div.platf h3 {
+	background-color: #216778;
+}
+div.lim {
+	background-color: #ffe6d5;
+	border: 1px solid #aa4400;
+	margin-bottom: 10px;
+}
+div.lim h3 {
+	background-color: #aa4400;
+}
+div.solve {
+	background-color: #e3f4d7;
+	border: 1px solid #447821;
+	margin-bottom: 10px;
+}
+div.solve h3 {
+	background-color: #447821;
+}
+div.c {
+	margin: 10px;
+}
+div.c .w {
+	width: 100%;
+}
+label.val {
+	font-weight: bold;
+}
+.main {
+	margin-left: 260px;
+}
+.main h3 {
+	background-color: #000;
+}
+.main h3 label {
+	margin-left: 20px;
+}
+#src {
+	width: 90%;
+	height: 300px;
+}
+-->
+</style>
+
+</head>
+<body>
+
+<!--[if lt IE 10]>
+<div class="iewarn box">Your browser cannot display this page properly.<br/>
+Upgrade to a newer version or use a different browser.</div>
+<div style="display:none">
+<![endif]--> 
+
+<div id="ctl">
+
+<div class="platf">
+<h3>1. Platform</h3>
+
+<div class="c">
+<label for="platform">Core model:</label><br/>
+<select id="platform" class="w" onchange="setActiveModel()">
+<select>
+<div id="customedit" style="text-align:right"><input type="button" value="Edit..." onclick="editClicked()" /></div>
+</div>
+
+<div class="c">
+<label for="ncores">Max number of cores:</label>&nbsp;<label id="valncores" class="val"></label><br/>
+<input id="ncores" type="range" min="0" max="7" step="0.05" value="4" onchange="setActiveModel()">
+</div>
+
+<div class="c">
+<label for="ipc">Average IPC for 1 core:</label>&nbsp;<label id="valipc" class="val"></label><br/>
+<input id="ipc" type="range" min="0.1" max="1" step="0.01" value="1" onchange="setActiveModel()">
+</div>
+</div>
+
+<div class="lim">
+<h3>2. Constraints</h3>
+
+<div class="c">
+<label for="limtype">Constraint type:</label><br/>
+<select id="limtype" class="w" onchange="setActiveModel()">
+	<option value="powerlim">Power Limit</option>
+	<option value="freqlim">Throughput Limit</option>
+<select>
+</div>
+
+<div id="cpowerlim" class="c">
+<label for="powerlim">Power limit:</label>&nbsp;<label id="valpowerlim" class="val"></label><br/>
+<input id="powerlim" type="range" min="0" max="1" step="0.01" value="0.5" onchange="applyLimits()">
+</div>
+
+<div id="cfreqlim" class="c">
+<label for="freqlim">Throughput limit:</label>&nbsp;<label id="valfreqlim" class="val"></label><br/>
+<input id="freqlim" type="range" min="0" max="1" step="0.01" value="0.5" onchange="applyLimits()">
+</div>
+
+<div class="c">
+<label for="law">Scaling model:</label><br/>
+<select id="law" class="w" onchange="applyLimits()">
+	<option value="scale_none">Perfect (linear)</option>
+	<option selected="1" value="scale_amdahl">Amdahl's</option>
+	<option value="scale_gustaf">Gustafson's</option>
+	<option value="scale_sunni">Sun and Ni's</option>
+<select>
+</div>
+
+<div id="cscale" class="c">
+<label for="scale">Parallelization factor:</label>&nbsp;<label id="valscale" class="val"></label><br/>
+<input id="scale" type="range" min="0" max="1" step="0.01" value="0.9" onchange="applyLimits()">
+</div>
+
+<div id="cgpower" class="c">
+<label for="gpower">G(n) = n<sup>x</sup>, where x =</label>&nbsp;<label id="valgpower" class="val"></label><br/>
+<input id="gpower" type="range" min="0" max="5" step="0.05" value="1.5" onchange="applyLimits()">
+</div>
+</div>
+
+<div class="solve">
+<h3>3. Solution</h3>
+<div id="csolve" class="c">
+&nbsp;
+</div>
+</div>
+
+<p><a href="http://www.prime-project.org/">prime-project.org</a></p>
+<p style="font-size:8pt">This work is supported by EPSRC research grant EP/K034448/1.</p>
+
+</div>
+
+<div id="graph" class="main">
+<h3><label id="modelName"></label></h3>
+<canvas id="plot" width="1200" height="800">
+</div>
+
+<div id="edit" class="main" style="display:none">
+<h3>Edit data</h3>
+<p>Enter data in CSV format. Each row should contain a single DVFS point, sorted by voltage with four columns of data.<br/>
+The columns should be: <i>voltage</i> (V), <i>frequency</i> (MHz), measured <i>effective power</i> (W) and <i>idle power</i> (W).<br/>
+When ready, click Parse to apply the model.</p>
+<p>The total power of the platform will be calculated as follows: <i>total power</i> = <i>idle power</i> + <i>number of cores</i> &middot; <i>effective power</i>.</p>
+<p><b>Privacy guarantee:</b> The data will NOT be saved or uploaded to the server. This is a client-side software, and it does not use cookies.</p>
+<textarea id="src">
+1.004	800	0.047	0.033
+1.05	1000	0.069	0.050
+1.13	1200	0.091	0.075
+1.232	1400	0.125	0.114
+</textarea>
+<p><input type="button" value="Parse" onclick="parseClicked()" />&nbsp;<input type="button" value="Cancel" onclick="cancelEdit()" /></p>
+</div>
+
+<!--[if lt IE 10]>
+</div>
+<![endif]--> 
+
+</body>
+</html>
