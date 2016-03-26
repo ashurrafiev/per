@@ -1,5 +1,9 @@
-# per
+# PER
 Performance-Energy-Reliability (PER) Interplay exploration tool
+
+Preview link:
+
+https://rawgit.com/ashurrafiev/per/master/per.html
 
 ## About
 
